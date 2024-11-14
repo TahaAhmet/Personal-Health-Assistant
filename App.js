@@ -5,14 +5,19 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StyleSheet } from 'react-native';
 
-import Ilaclarim from './src/screens/Ilaclarim';
-import AnaEkran from './src/screens/AnaEkran';
-import TakipSistemi from './src/screens/TakipSistemi';
-
+//ANA EKRANLARIMIZ BURADA.
+import HomeScreen from './src/screens/HomeScreen';
+import MyMedicines from './src/screens/MyMedicines';
+import TrackingSystem from './src/screens/TrackingSystem';
 import Account from './src/screens/Account';
+
+
+//BURADA İSE ACCOUNT EKRANININ İÇİNDEN GİRİLEN STACK SCREENLERİM VAR.
 import ForgetPasswordScreen from './src/screens/AccountScreens/ForgetPasswordScreen';
 import RegisterScreen from './src/screens/AccountScreens/RegisterScreen';
 import LoginAccountScreen from './src/screens/AccountScreens/LoginAccountScreen';
+
+
 
 const Tab = createBottomTabNavigator();
 const AccountStack = createStackNavigator();
@@ -55,9 +60,9 @@ export default function App() {
           tabBarLabelStyle: { fontSize: 14, fontWeight: 'bold' },
         })}
       >
-        <Tab.Screen name="Ana Ekran" component={AnaEkran} />
-        <Tab.Screen name="İlaçlarım" component={Ilaclarim} />
-        <Tab.Screen name="Takip Sistemi" component={TakipSistemi} />
+        <Tab.Screen name="Ana Ekran" component={HomeScreen} />
+        <Tab.Screen name="İlaçlarım" component={MyMedicines} />
+        <Tab.Screen name="Takip Sistemi" component={TrackingSystem} />
         <Tab.Screen name="Profil" component={AccountStackScreen} options={{ headerShown: false }} />
       </Tab.Navigator>
     </NavigationContainer>
