@@ -1,27 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Button, View } from 'react-native';
+import { auth } from './firebase'; // Firebase bağlantısını kontrol edin
 
-//ANA EKRANLARIMIZ BURADA.
+// ANA EKRANLARIMIZ
 import HomeScreen from './src/screens/HomeScreen';
 import MyMedicines from './src/screens/MyMedicines';
 import TrackingSystem from './src/screens/TrackingSystem';
+
+// ACCOUNT STACK EKRANLARI
 import Account from './src/screens/Account';
-
-
-//BURADA İSE ACCOUNT EKRANININ İÇİNDEN GİRİLEN STACK SCREENLERİM VAR.
 import ForgetPasswordScreen from './src/screens/AccountScreens/ForgetPasswordScreen';
 import RegisterScreen from './src/screens/AccountScreens/RegisterScreen';
 import LoginAccountScreen from './src/screens/AccountScreens/LoginAccountScreen';
 
-
-
 const Tab = createBottomTabNavigator();
-const AccountStack = createStackNavigator();
+const AccountStack  = createStackNavigator();
 
+// **AUTH EKRANLARI**
 function AccountStackScreen() {
   return (
     <AccountStack.Navigator screenOptions={{ headerShown: false }}>
@@ -33,38 +32,55 @@ function AccountStackScreen() {
   );
 }
 
+
+// **BOTTOM TAB KURULUMU**
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Kullanıcı Oturum Durumu
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user); // Kullanıcı oturum açmışsa true, aksi halde false
+    });
+    return unsubscribe;
+  }, []);
+
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color }) => {
-            let iconName;
-            let iconSize = 50;
+      {isLoggedIn ? (
+        // Eğer kullanıcı giriş yaptıysa ana uygulamayı göster
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ color }) => {
+              let iconName;
+              let iconSize = 50;
 
-            if (route.name === 'Ana Ekran') {
-              iconName = 'home';
-            } else if (route.name === 'İlaçlarım') {
-              iconName = 'medication';
-            } else if (route.name === 'Takip Sistemi') {
-              iconName = 'timeline';
-            } else if (route.name === 'Profil') {
-              iconName = 'account-circle';
-            }
+              if (route.name === 'Ana Ekran') {
+                iconName = 'home';
+              } else if (route.name === 'İlaçlarım') {
+                iconName = 'medication';
+              } else if (route.name === 'Takip Sistemi') {
+                iconName = 'timeline';
+              } else if (route.name === 'Profil') {
+                iconName = 'account-circle';
+              }
 
-            return <Icon name={iconName} size={iconSize} color={color} />;
-          },
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: { height: 90 },
-          tabBarLabelStyle: { fontSize: 14, fontWeight: 'bold' },
-        })}
-      >
-        <Tab.Screen name="Ana Ekran" component={HomeScreen} />
-        <Tab.Screen name="İlaçlarım" component={MyMedicines} />
-        <Tab.Screen name="Takip Sistemi" component={TrackingSystem} />
-        <Tab.Screen name="Profil" component={AccountStackScreen} options={{ headerShown: false }} />
-      </Tab.Navigator>
+              return <Icon name={iconName} size={iconSize} color={color} />;
+            },
+            tabBarActiveTintColor: 'tomato',
+            tabBarInactiveTintColor: 'gray',
+            tabBarStyle: { height: 90 },
+            tabBarLabelStyle: { fontSize: 14, fontWeight: 'bold' },
+          })}
+        >
+          <Tab.Screen name="Ana Ekran" component={HomeScreen} />
+          <Tab.Screen name="İlaçlarım" component={MyMedicines} />
+          <Tab.Screen name="Takip Sistemi" component={TrackingSystem} />
+          <Tab.Screen name="Profil" component={LoginAccountScreen} options={{ headerShown: false }} />
+        </Tab.Navigator>
+      ) : (
+        // Eğer kullanıcı giriş yapmadıysa AccountStack 'i göster
+        <AccountStackScreen />
+      )}
     </NavigationContainer>
   );
 }

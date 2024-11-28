@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import moment from 'moment'
+import moment from 'moment';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import EmergencyButton from "../components/TahaComponents/EmergencyButton";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../../firebase'; // Firebase'i buraya ekliyoruz
 import PushNotification from 'react-native-push-notification';
-
 
 const HomeScreen = () => {
   const [userName, setUserName] = useState('');
@@ -12,10 +11,11 @@ const HomeScreen = () => {
   const [upcomingMedicines, setUpcomingMedicines] = useState([]);
 
   useEffect(() => {
-    const fetchUserName = async () => {
-      const user = 'Ahmet';
-      setUserName(user);
-    };
+    // Giriş yapan kullanıcı bilgilerini al
+    const user = auth.currentUser;
+    if (user) {
+      setUserName(user.displayName || 'Ad Soyad Bilinmiyor'); // Kullanıcı adı varsa, yoksa varsayılan değer
+    }
 
     const fetchDailyTip = () => {
       const tips = [
@@ -34,12 +34,11 @@ const HomeScreen = () => {
         const medicines = JSON.parse(storedMedicines);
         const currentTime = moment();
 
-        // Yaklaşan ilaçları filtrele ve bildirimi ayarla
         const upcoming = medicines.filter((med) => {
           const medTime = moment(med.time, 'HH:mm');
           const diffHours = medTime.diff(currentTime, 'hours');
           if (diffHours <= 12 && diffHours >= 0) {
-            scheduleNotification(med);  // Bildirim ayarla
+            scheduleNotification(med); // Bildirim ayarla
             return true;
           }
           return false;
@@ -52,15 +51,14 @@ const HomeScreen = () => {
     const scheduleNotification = (medicine) => {
       const medTime = moment(medicine.time, 'HH:mm');
       const delay = medTime.diff(moment(), 'milliseconds');
-      
+
       PushNotification.localNotificationSchedule({
-        message: `${medicine.name} ilacını alma zamanı!`, 
-        date: new Date(Date.now() + delay), 
+        message: `${medicine.name} ilacını alma zamanı!`,
+        date: new Date(Date.now() + delay),
         allowWhileIdle: true,
       });
     };
 
-    fetchUserName();
     fetchDailyTip();
     loadMedicines();
   }, []);
@@ -70,7 +68,7 @@ const HomeScreen = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Hoş Geldiniz, {userName}!</Text>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Günlük Sağlık Önerisi</Text>
         <Text style={styles.tipText}>{dailyTips}</Text>
@@ -126,7 +124,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)', 
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
