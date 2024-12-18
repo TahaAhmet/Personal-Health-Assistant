@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
+import "firebase/compat/firestore";
 // Import the functions you need from the SDKs you need
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -20,10 +21,15 @@ const firebaseConfig = {
   measurementId: "G-ER5TW0QWEG"
 };
 
-// Initialize Firebase
+// Firebase'i başlat
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+} else {
+  firebase.app(); // Eğer zaten başlatılmışsa, mevcut uygulamayı kullan
 }
-const auth = firebase.auth();
 
-export { auth };
+// Export auth ve firestore
+export const auth = firebase.auth();
+export const firestore = firebase.firestore();
+export const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+export default firebase;
