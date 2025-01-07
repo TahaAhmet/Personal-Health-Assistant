@@ -3,6 +3,7 @@
     "name": "firstapp",
     "slug": "firstapp",
     "version": "1.0.0",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,17 +15,20 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "permissions": [
+        "NOTIFICATIONS",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "NOTIFICATIONS",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      },
+      "package": "com.anonymous.firstapp"
     }
   }
 }

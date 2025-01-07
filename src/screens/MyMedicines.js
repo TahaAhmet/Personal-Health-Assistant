@@ -1,154 +1,157 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { firestore, auth, serverTimestamp } from '../../firebase'; // firebase.js dosyasından import
+import { View, Text, Alert, StyleSheet, TextInput, TouchableOpacity, Vibration } from 'react-native';
+import { firestore, auth, serverTimestamp } from '../../firebase';
 import MedicineList from '../components/TahaComponents/MedicineList';
 
 const MyMedicines = () => {
-  const [medicineName, setMedicineName] = useState('');
-  const [medicineTime, setMedicineTime] = useState('');
-  const [medicines, setMedicines] = useState([]);
-  const userId = auth.currentUser?.uid; // Firebase Auth kullanarak mevcut kullanıcı ID'sini alın
+    const [medicineName, setMedicineName] = useState('');
+    const [medicineTime, setMedicineTime] = useState('');
+    const [medicines, setMedicines] = useState([]);
+    const [editingMedicineId, setEditingMedicineId] = useState(null);
+    const userId = auth.currentUser?.uid;
 
-  useEffect(() => {
-    if (userId) {
-      const unsubscribe = firestore
-        .collection('users')
-        .doc(userId)
-        .collection('medicines')
-        .onSnapshot((querySnapshot) => {
-          const meds = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setMedicines(meds);
-        });
-      return () => unsubscribe();
-    }
-  }, [userId]);
+    useEffect(() => {
+        if (!userId) return;
+        const unsubscribe = firestore
+            .collection('users')
+            .doc(userId)
+            .collection('medicines')
+            .onSnapshot(snapshot => {
+                const meds = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setMedicines(meds);
+            });
+        return () => unsubscribe();
+    }, [userId]);
 
-  // Yeni ilaç ekleme işlevi
-  const addMedicine = async () => {
-    if (!medicineName || !medicineTime) {
-      Alert.alert('Hata', 'Lütfen ilaç adı ve saatini girin.');
-      return;
-    }
+    // 📢 Yeni ilaç ekleme ve düzenleme
+    const addOrUpdateMedicine = async () => {
+        if (!medicineName || !medicineTime) {
+            Alert.alert('Lütfen hem ilaç adını hem de saatini girin.');
+            return;
+        }
 
-    // Saat formatını kontrol et
-    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/; // HH:mm formatında saat
-    if (!timeFormat.test(medicineTime)) {
-      Alert.alert('Hata', 'Saat formatı hatalı. Lütfen HH:mm formatında bir saat girin.');
-      return;
-    }
+        const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        if (!timeFormat.test(medicineTime)) {
+            Alert.alert('Saat formatı hatalı. Lütfen HH:mm formatında girin.');
+            return;
+        }
 
-    // Aynı ilaç ve aynı saat kontrolü (aynı saatte aynı ilaç engelleniyor)
-    const existingMedicine = medicines.find(
-      (med) => med.time === medicineTime && med.name === medicineName
-    );
+        const [hour, minute] = medicineTime.split(':').map(Number);
+        const now = new Date();
+        const alarmTime = new Date();
+        alarmTime.setHours(hour);
+        alarmTime.setMinutes(minute);
+        alarmTime.setSeconds(0);
 
-    if (existingMedicine) {
-      Alert.alert('Hata', `Bu ilaç zaten aynı saatte eklenmiş: ${medicineName} (${medicineTime})`);
-      return;
-    }
+        if (alarmTime > now) {
+            setTimeout(() => {
+                triggerAlarm(); // Alarm tetikleme
+            }, alarmTime.getTime() - now.getTime());
+        }
 
-    const newMedicine = {
-      name: medicineName,
-      time: medicineTime,
-      createdAt: serverTimestamp(),
+        try {
+            if (editingMedicineId) {
+                await firestore.collection('users').doc(userId).collection('medicines').doc(editingMedicineId).update({
+                    name: medicineName,
+                    time: medicineTime,
+                });
+                Alert.alert('İlaç başarıyla güncellendi!');
+            } else {
+                await firestore.collection('users').doc(userId).collection('medicines').add({
+                    name: medicineName,
+                    time: medicineTime,
+                    createdAt: serverTimestamp(),
+                });
+                Alert.alert('İlaç başarıyla eklendi!');
+            }
+            setMedicineName('');
+            setMedicineTime('');
+            setEditingMedicineId(null);
+        } catch (error) {
+            console.error('İlaç eklenirken veya güncellenirken hata:', error);
+        }
     };
 
-    try {
-      await firestore
-        .collection('users')
-        .doc(userId)
-        .collection('medicines')
-        .add(newMedicine);
-      setMedicineName('');
-      setMedicineTime('');
-    } catch (error) {
-      console.error('İlaç eklenirken hata oluştu:', error);
-    }
-  };
+    // 📢 Titreşimle Alarm Fonksiyonu
+    const triggerAlarm = () => {
+        const vibrationPattern = [1000, 2000, 1000]; // 1 saniye titreşim, 2 saniye durma
+        Vibration.vibrate(vibrationPattern, true); // Sürekli titreşim
 
-  // İlaç silme işlevi
-  const deleteMedicine = async (id) => {
-    try {
-      await firestore
-        .collection('users')
-        .doc(userId)
-        .collection('medicines')
-        .doc(id)
-        .delete();
-    } catch (error) {
-      console.error('İlaç silinirken hata oluştu:', error);
-    }
-  };
+        Alert.alert('İlaç Zamanı!', 'İlacını almayı unutma!', [
+            {
+                text: 'Tamam',
+                onPress: () => Vibration.cancel(), // Titreşimi durdur
+            },
+        ]);
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>İlaçlarım</Text>
+    // 📢 İlaç Silme
+    const deleteMedicine = async (id) => {
+        try {
+            await firestore.collection('users').doc(userId).collection('medicines').doc(id).delete();
+            Alert.alert('İlaç başarıyla silindi.');
+        } catch (error) {
+            console.error('İlaç silinirken hata:', error);
+        }
+    };
 
-      {/* İlaç Ekleme Formu */}
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="İlaç Adı"
-          value={medicineName}
-          onChangeText={setMedicineName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Saat (HH:mm)"
-          value={medicineTime}
-          onChangeText={setMedicineTime}
-          keyboardType="numeric"
-        />
-        <TouchableOpacity style={styles.button} onPress={addMedicine}>
-          <Text style={styles.buttonText}>Ekle</Text>
-        </TouchableOpacity>
-      </View>
+    // 📢 İlaç Düzenleme Moduna Geçme
+    const startEditing = (medicine) => {
+        setMedicineName(medicine.name);
+        setMedicineTime(medicine.time);
+        setEditingMedicineId(medicine.id);
+    };
 
-      {/* İlaç Listesi */}
-      <MedicineList medicines={medicines} deleteMedicine={deleteMedicine} />
-    </View>
-  );
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>İlaçlarım</Text>
+            <View style={styles.form}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="İlaç Adı"
+                    value={medicineName}
+                    onChangeText={setMedicineName}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Saat (HH:mm)"
+                    value={medicineTime}
+                    onChangeText={(text) => {
+                        if (text.length === 2 && !text.includes(':')) {
+                            setMedicineTime(text + ':');
+                        } else if (text.length <= 5) {
+                            setMedicineTime(text);
+                        }
+                    }}
+                    maxLength={5}
+                    keyboardType="numeric"
+                />
+                <TouchableOpacity style={styles.button} onPress={addOrUpdateMedicine}>
+                    <Text style={styles.buttonText}>
+                        {editingMedicineId ? 'Güncelle' : 'Ekle'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* 📢 MedicineList Bileşeni */}
+            <MedicineList
+                medicines={medicines}
+                deleteMedicine={deleteMedicine}
+                editMedicine={startEditing}
+            />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#F0F4F8',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  form: {
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+    container: { flex: 1, padding: 20, backgroundColor: '#F0F4F8' },
+    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 10 },
+    button: { backgroundColor: '#4CAF50', padding: 10, borderRadius: 5, alignItems: 'center' },
+    buttonText: { color: '#fff', fontSize: 16 },
 });
 
 export default MyMedicines;
