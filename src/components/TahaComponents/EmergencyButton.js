@@ -8,7 +8,7 @@ const EmergencyButton = () => {
       '112\'yi aramak istediğinize emin misiniz?',
       [
         { text: 'İptal', style: 'cancel' },
-        { text: 'Arama', onPress: () => Linking.openURL('tel:112') }
+        { text: 'Ara', onPress: () => Linking.openURL('tel:112') }
       ],
       { cancelable: true }
     );

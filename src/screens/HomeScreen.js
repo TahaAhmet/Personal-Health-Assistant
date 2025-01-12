@@ -1,66 +1,42 @@
 import React, { useEffect, useState } from 'react';
-import moment from 'moment';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import EmergencyButton from "../components/TahaComponents/EmergencyButton";
-import { auth } from '../../firebase'; // Firebase'i buraya ekliyoruz
-import PushNotification from 'react-native-push-notification';
+import { auth } from '../../firebase';
 
 const HomeScreen = () => {
   const [userName, setUserName] = useState('');
   const [dailyTips, setDailyTips] = useState('');
-  const [upcomingMedicines, setUpcomingMedicines] = useState([]);
 
   useEffect(() => {
-    // Giriş yapan kullanıcı bilgilerini al
     const user = auth.currentUser;
     if (user) {
-      setUserName(user.displayName || 'Ad Soyad Bilinmiyor'); // Kullanıcı adı varsa, yoksa varsayılan değer
+      setUserName(user.displayName || 'Ad Soyad Bilinmiyor');
     }
 
     const fetchDailyTip = () => {
       const tips = [
-        'Bugün bol su içmeyi unutmayın!',
         'İlaçlarınızı zamanında alın.',
         '15 dakika hafif egzersiz yapmaya çalışın.',
         'Günde en az 7 saat uyumaya özen gösterin.',
-        'Sigara ve alkolden uzak durun.'
+        'Sigara ve alkolden uzak durun.',
+        'Stresten uzak durmaya ve kendinize zaman ayırmaya çalışın.',
+        'Düzenli sağlık kontrollerinizi aksatmayın.',
+        'Güneş kremi kullanmayı unutmayın, cildinizi koruyun.',
+        'Bugün taze sebze ve meyve tüketmeyi ihmal etmeyin.',
+        'Ellerinizi sık sık yıkayarak hijyene dikkat edin.',
+        'Doğru duruş pozisyonu için otururken dik durmaya özen gösterin.',
+        'Dişlerinizi günde iki kez fırçalamayı unutmayın.',
+        'Pozitif düşünmeye ve güzel anlar biriktirmeye odaklanın.',
+        'Kendinize küçük molalar vererek zihninizi dinlendirin.',
+        'Bağışıklık sisteminizi güçlendirmek için dengeli beslenin.',
+        'Açık havada vakit geçirin, temiz hava alın.',
+        'Arkadaşlarınız ve sevdiklerinizle kaliteli zaman geçirin.',
+        'Duygularınızı ifade edin, kendinizi baskılamayın.',
       ];
       setDailyTips(tips[Math.floor(Math.random() * tips.length)]);
     };
 
-    const loadMedicines = async () => {
-      const storedMedicines = await AsyncStorage.getItem('medicines');
-      if (storedMedicines) {
-        const medicines = JSON.parse(storedMedicines);
-        const currentTime = moment();
-
-        const upcoming = medicines.filter((med) => {
-          const medTime = moment(med.time, 'HH:mm');
-          const diffHours = medTime.diff(currentTime, 'hours');
-          if (diffHours <= 12 && diffHours >= 0) {
-            scheduleNotification(med); // Bildirim ayarla
-            return true;
-          }
-          return false;
-        });
-
-        setUpcomingMedicines(upcoming);
-      }
-    };
-
-    const scheduleNotification = (medicine) => {
-      const medTime = moment(medicine.time, 'HH:mm');
-      const delay = medTime.diff(moment(), 'milliseconds');
-
-      PushNotification.localNotificationSchedule({
-        message: `${medicine.name} ilacını alma zamanı!`,
-        date: new Date(Date.now() + delay),
-        allowWhileIdle: true,
-      });
-    };
-
     fetchDailyTip();
-    loadMedicines();
   }, []);
 
   return (
@@ -72,19 +48,6 @@ const HomeScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Günlük Sağlık Önerisi</Text>
         <Text style={styles.tipText}>{dailyTips}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Yaklaşan İlaç Hatırlatmaları</Text>
-        {upcomingMedicines.length > 0 ? (
-          upcomingMedicines.map((med, index) => (
-            <Text key={index} style={styles.reminderText}>
-              {med.name} - {med.time} ({moment(med.time, 'HH:mm').fromNow()})
-            </Text>
-          ))
-        ) : (
-          <Text style={styles.reminderText}>Yaklaşan ilaç yok</Text>
-        )}
       </View>
 
       <View style={styles.section}>
@@ -103,7 +66,8 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#F0F4F8',
-    padding: 20,
+    paddingTop: 50, 
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   header: {

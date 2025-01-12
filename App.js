@@ -10,6 +10,7 @@ import { auth } from './firebase'; // Firebase bağlantısını kontrol edin
 import HomeScreen from './src/screens/HomeScreen';
 import MyMedicines from './src/screens/MyMedicines';
 import TrackingSystem from './src/screens/TrackingSystem';
+import ReportReminderScreen from './src/screens/ReportReminderScreen';
 
 // ACCOUNT STACK EKRANLARI
 import Account from './src/screens/Account';
@@ -62,6 +63,8 @@ export default function App() {
                 iconName = 'timeline';
               } else if (route.name === 'Profil') {
                 iconName = 'account-circle';
+              } else if (route.name === 'Rapor Hatırlatıcı') {
+                iconName = 'alarm';
               }
 
               return <Icon name={iconName} size={iconSize} color={color} />;
@@ -72,9 +75,10 @@ export default function App() {
             tabBarLabelStyle: { fontSize: 14, fontWeight: 'bold' },
           })}
         >
-          <Tab.Screen name="Ana Ekran" component={HomeScreen} />
-          <Tab.Screen name="İlaçlarım" component={MyMedicines} />
-          <Tab.Screen name="Takip Sistemi" component={TrackingSystem} />
+          <Tab.Screen name="Ana Ekran" component={HomeScreen} options={{ headerShown: false }} />
+          <Tab.Screen name="İlaçlarım" component={MyMedicines} options={{ headerShown: false }} />
+          <Tab.Screen name="Takip Sistemi" component={TrackingSystem} options={{ headerShown: false }} />
+          <Tab.Screen name="Rapor Hatırlatıcı" component={ReportReminderScreen} options={{ headerShown: false }} />
           <Tab.Screen name="Profil" component={LoginAccountScreen} options={{ headerShown: false }} />
         </Tab.Navigator>
       ) : (
