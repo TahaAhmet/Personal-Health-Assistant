@@ -12,6 +12,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "ios": {
+      "usesLocationBackgroundMode": true,
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "NSLocationWhenInUseUsageDescription": "Uygulama açıkken konumunuza erişmek istiyoruz.",
+        "NSLocationAlwaysUsageDescription": "Arka planda konumunuza erişmek istiyoruz.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Konumunuza her zaman erişmek istiyoruz."
+      }
+    },
+
+
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -22,8 +36,18 @@
         "FOREGROUND_SERVICE",
         "NOTIFICATIONS",
         "WAKE_LOCK",
-        "FOREGROUND_SERVICE"
+        "FOREGROUND_SERVICE",
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
       ],
+      "foregroundService": {
+        "notification": {
+          "title": "Konum izleniyor",
+          "body": "Konum arka planda izleniyor",
+          "channelId": "location-tracking"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

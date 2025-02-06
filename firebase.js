@@ -1,35 +1,37 @@
-// Import the functions you need from the SDKs you need
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import "firebase/compat/firestore";
-// Import the functions you need from the SDKs you need
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import 'firebase/compat/firestore';
+import { getDatabase } from 'firebase/database'; 
+import { getAnalytics } from 'firebase/analytics'; 
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAYAgiqdQ8x15D4JV-twnVkfmxsbjK_HyE",
+  apiKey: "AIzaSyAYAgiqdQ8x15D4JV-twnVkfmxsbjK_HyE", 
   authDomain: "personal-health-assistan-310a6.firebaseapp.com",
   projectId: "personal-health-assistan-310a6",
   storageBucket: "personal-health-assistan-310a6.firebasestorage.app",
   messagingSenderId: "422583019688",
   appId: "1:422583019688:web:0649cba454edcf3fa03a9d",
-  measurementId: "G-ER5TW0QWEG"
+  measurementId: "G-ER5TW0QWEG", 
+  databaseURL: "https://personal-health-assistan-310a6-default-rtdb.firebaseio.com/", 
 };
 
-// Firebase'i başlat
+
 if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig); 
 } else {
-  firebase.app(); // Eğer zaten başlatılmışsa, mevcut uygulamayı kullan
+  firebase.app(); 
 }
 
-// Export auth ve firestore
-export const auth = firebase.auth();
-export const firestore = firebase.firestore();
-export const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+
+const auth = firebase.auth();
+const firestore = firebase.firestore(); 
+const database = getDatabase(); 
+const analytics = getAnalytics(); 
+
+
+const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+
+
+export { auth, firestore, database, analytics, serverTimestamp };
 export default firebase;
